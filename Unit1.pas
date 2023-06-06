@@ -39,7 +39,9 @@ type
   end;
 
 const
-  DataFile = 'c:\proj\test_delphi\delphi_mkb10\base\mkb10_import.txt';
+  DataFile = 'c:\proj\test_delphi\delphi_mkb10\base\mkb10.sql';
+  ExcludeStr1 = 'INSERT INTO';
+  ExcludeStr2 = 'REINSERT (';
 
   SQLSelectWhere =
         'SELECT ' +
@@ -102,6 +104,9 @@ begin
 
     for i := 0 to Pred(SL.Count) do
     begin
+      if (Pos(ExcludeStr1,SL.Strings[i]) = 0) then
+        if (Pos(ExcludeStr2,SL.Strings[i]) = 0) then Continue;
+
       mds_full.Append;
 //      s:= SL.Strings[i];
 //      k:= PosEx(a,s) + System.Length(a);
@@ -136,7 +141,9 @@ begin
       m:= PosEx(e,SL.Strings[i],k);
       mds_full.FieldByName('VALUES_UID').AsString:= Copy(SL.Strings[i],k,m-k);
     end;
-    mds_full.Post;
+
+    if not mds_full.IsEmpty then mds_full.Post;
+
   finally
     FreeAndNil(SL);
     mds_full.EnableControls;
@@ -146,22 +153,22 @@ end;
 procedure TForm1.CheckBox1Click(Sender: TObject);
 begin
 //Exit;
-  mds.DisableControls;
-  try
-    if CheckBox1.Checked
-    then
-      begin
-        grEh.Options:= grEh.Options - [dgIndicator];
-      end
-    else
-      begin
-        grEh.Options:= grEh.Options + [dgIndicator];
-      end;
-
-    mds.TreeList.Active:= CheckBox1.Checked;
-  finally
-    mds.EnableControls;
-  end;
+//  mds.DisableControls;
+//  try
+//    if CheckBox1.Checked
+//    then
+//      begin
+//        grEh.Options:= grEh.Options - [dgIndicator];
+//      end
+//    else
+//      begin
+//        grEh.Options:= grEh.Options + [dgIndicator];
+//      end;
+//
+//    mds.TreeList.Active:= CheckBox1.Checked;
+//  finally
+//    mds.EnableControls;
+//  end;
 end;
 
 procedure TForm1.EdtChgEvent(Sender: TObject);
@@ -176,17 +183,17 @@ begin
   //заставляем скроллироваться через грид записи в мемтабле
   DBGridEhCenter.UseExtendedScrollingForMemTable:= False;
 
-  with mds do
-  begin
-    FieldDefs.Add('MKB_CODE', ftString, 10);
-    FieldDefs.Add('MKB_CAPTION', ftString, 260);
-    FieldDefs.Add('TREE_ID', ftInteger);
-    FieldDefs.Add('VALUES_UID', ftInteger);
-
-    CreateDataSet;
-    Filtered := False;
-    Active := False;
-  end;
+//  with mds do
+//  begin
+//    FieldDefs.Add('MKB_CODE', ftString, 10);
+//    FieldDefs.Add('MKB_CAPTION', ftString, 260);
+//    FieldDefs.Add('TREE_ID', ftInteger);
+//    FieldDefs.Add('VALUES_UID', ftInteger);
+//
+//    CreateDataSet;
+//    Filtered := False;
+//    Active := False;
+//  end;
 
   with mds_full do
   begin
@@ -201,9 +208,10 @@ begin
   end;
 
   ActFillMDS_FullExecute(Sender);
-  mds_full.TreeList.KeyFieldName:= 'VALUES_UID';
-  mds_full.TreeList.RefParentFieldName:= 'TREE_ID';
-  mds_full.TreeList.Active:= True;
+
+//  mds_full.TreeList.KeyFieldName:= 'VALUES_UID';
+//  mds_full.TreeList.RefParentFieldName:= 'TREE_ID';
+//  mds_full.TreeList.Active:= True;
 //  Exit;
 //
 //  mds.Active:= True;
@@ -279,54 +287,54 @@ procedure TForm1.mdsRecordsViewTreeNodeExpanding(Sender: TObject; Node: TMemRecV
 var
   tmpID, i: Integer;
 begin
-//  Self.Caption:= Node.Rec.DataValues['MKB_VALUES',dvvValueEh];
-  try
-//    for i := 0 to Pred(grEh.SelectedRows.Count) do
-//    grEh.SelectedRows.CurrentRowSelected:= False;
-
-    mds.TreeList.Locate('VALUES_UID',Node.Rec.DataValues['VALUES_UID',dvvValueEh],[]);
-//    grEh.SelectedRows.CurrentRowSelected:= True;
-
-    mds.DisableControls;
-    if (mds.TreeNodeChildCount = 0) then
-    begin
-      tmpID:= Node.Rec.DataValues['VALUES_UID',dvvValueEh];
-      try
-        tmpTrans.StartTransaction;
-        tmpQry.Close;
-        tmpQry.SQL.Text:= SQLSelectWhere;
-
-        tmpQry.Prepare;
-        tmpQry.ParamByName('TREE_ID').Value:= tmpID;
-        tmpQry.ExecQuery;
-
-        while not tmpQry.Eof do
-        begin
-          mds.AppendRecord([
-          tmpQry.FieldByName('MKB_CODE').AsString,
-          tmpQry.FieldByName('MKB_CAPTION').AsString,
-          tmpQry.FieldByName('TREE_ID').AsInteger,
-          tmpQry.FieldByName('VALUES_UID').AsInteger
-                          ]);
-          tmpQry.Next;
-        end;
-
-        tmpTrans.Commit;
-
-      except
-        on E: Exception do
-        begin
-          tmpTrans.Rollback;
-          ShowMessage(e.Message);
-        end;
-      end;
-    end;
-  finally
-    mds.EnableControls;
-//    Self.Caption:= 'ChildNode Count: ' + IntToStr(Node.NodesCount);
-//    Node.NodeHasChildren:= (Node.NodesCount > 0);
-
-  end;
+////  Self.Caption:= Node.Rec.DataValues['MKB_VALUES',dvvValueEh];
+//  try
+////    for i := 0 to Pred(grEh.SelectedRows.Count) do
+////    grEh.SelectedRows.CurrentRowSelected:= False;
+//
+//    mds.TreeList.Locate('VALUES_UID',Node.Rec.DataValues['VALUES_UID',dvvValueEh],[]);
+////    grEh.SelectedRows.CurrentRowSelected:= True;
+//
+//    mds.DisableControls;
+//    if (mds.TreeNodeChildCount = 0) then
+//    begin
+//      tmpID:= Node.Rec.DataValues['VALUES_UID',dvvValueEh];
+//      try
+//        tmpTrans.StartTransaction;
+//        tmpQry.Close;
+//        tmpQry.SQL.Text:= SQLSelectWhere;
+//
+//        tmpQry.Prepare;
+//        tmpQry.ParamByName('TREE_ID').Value:= tmpID;
+//        tmpQry.ExecQuery;
+//
+//        while not tmpQry.Eof do
+//        begin
+//          mds.AppendRecord([
+//          tmpQry.FieldByName('MKB_CODE').AsString,
+//          tmpQry.FieldByName('MKB_CAPTION').AsString,
+//          tmpQry.FieldByName('TREE_ID').AsInteger,
+//          tmpQry.FieldByName('VALUES_UID').AsInteger
+//                          ]);
+//          tmpQry.Next;
+//        end;
+//
+//        tmpTrans.Commit;
+//
+//      except
+//        on E: Exception do
+//        begin
+//          tmpTrans.Rollback;
+//          ShowMessage(e.Message);
+//        end;
+//      end;
+//    end;
+//  finally
+//    mds.EnableControls;
+////    Self.Caption:= 'ChildNode Count: ' + IntToStr(Node.NodesCount);
+////    Node.NodeHasChildren:= (Node.NodesCount > 0);
+//
+//  end;
 end;
 
 end.
